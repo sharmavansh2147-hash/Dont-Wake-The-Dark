@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DON'T WAKE THE DARK — 2D Survival Horror Escape</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏮</text></svg>">
+  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-wrapper">
+    <canvas id="gameCanvas" width="960" height="640" tabindex="0"></canvas>
+
+    <!-- Persistent Top Quick Camera Toggle Button -->
+    <button id="btn-quick-cam" class="quick-cam-toggle-btn" type="button" title="Start / Stop Webcam Face Tracking">
+      <span class="cam-icon">📹</span>
+      <span id="quick-cam-text">FACE CONTROLS: OFF</span>
+    </button>
+
+    <!-- Live In-Browser Facial Gesture Tracking PiP HUD -->
+    <div id="face-tracker-pip" class="face-pip-container hidden">
+      <div class="face-pip-header">
+        <span class="pip-dot active"></span>
+        <span class="pip-title">FACIAL SENSOR</span>
+        <button id="btn-pip-close" class="pip-close-btn" type="button" title="Close Camera">&times;</button>
+      </div>
+      <div class="face-pip-video-wrapper">
+        <video id="face-video" playsinline autoplay muted style="display: none;"></video>
+        <canvas id="face-canvas" width="160" height="120"></canvas>
+      </div>
+      <div class="face-pip-indicators">
+        <div class="pip-ind-item" id="ind-up"><span class="pip-ind-key">&uarr;</span> UP</div>
+        <div class="pip-ind-item" id="ind-down"><span class="pip-ind-key">&darr;</span> DOWN</div>
+        <div class="pip-ind-item" id="ind-left"><span class="pip-ind-key">&larr;</span> LEFT</div>
+        <div class="pip-ind-item" id="ind-right"><span class="pip-ind-key">&rarr;</span> RIGHT</div>
+        <div class="pip-ind-item" id="ind-mouth"><span class="pip-ind-key">Z</span> MOUTH</div>
+        <div class="pip-ind-item" id="ind-blink"><span class="pip-ind-key">SPC</span> BLINK</div>
+      </div>
+      <div class="face-pip-footer">
+        <div class="face-pip-controls-row">
+          <button id="btn-pip-calibrate" class="pip-cal-btn" type="button">⟳ CALIBRATE</button>
+          <button id="btn-pip-sens" class="pip-sens-btn" type="button" title="Toggle Gesture Sensitivity">SENS: HIGH</button>
+        </div>
+        <span id="pip-feedback" class="pip-feedback-text">Ready</span>
+      </div>
+    </div>
+
+    <!-- In-Game HUD Overlay -->
+    <div id="hud" class="screen-overlay hidden">
+      <div class="hud-top-bar">
+        <div class="hud-group" id="tier-level-group">
+          <span class="hud-label">OBSERVATORY</span>
+          <div class="level-display" id="level-display">EASY • 01/30</div>
+        </div>
+
+        <div class="hud-group" id="health-group">
+          <span class="hud-label">HEALTH</span>
+          <div class="hearts-container" id="hearts-container">
+            <span class="heart active"></span>
+            <span class="heart active"></span>
+            <span class="heart active"></span>
+          </div>
+        </div>
+
+        <div class="hud-group" id="keys-group">
+          <span class="hud-label">COLLECTIBLES</span>
+          <div class="keys-display" id="keys-display">KEYS 0/3</div>
+        </div>
+
+        <div class="hud-group" id="timer-group">
+          <span class="hud-label">TIME REMAINING</span>
+          <div class="timer-display" id="timer-display">180s</div>
+        </div>
+
+        <div class="hud-group" id="score-group">
+          <span class="hud-label">SCORE</span>
+          <div class="score-display" id="score-display">0000</div>
+        </div>
+      </div>
+
+      <!-- Level Chamber Progress Bar -->
+      <div class="level-progress-container">
+        <div class="level-progress-fill" id="level-progress-fill"></div>
+      </div>
+
+      <div class="hud-bottom-bar">
+        <!-- Ability 1: Protective Ward (Z) -->
+        <div class="ability-card" id="ward-card">
+          <div class="ability-key">Z</div>
+          <div class="ability-info">
+            <div class="ability-name">PROTECTIVE WARD</div>
+            <div class="ability-meter-bg"><div class="ability-meter-fill" id="ward-meter"></div></div>
+            <div class="ability-status" id="ward-status">READY</div>
+            <div class="ability-subhint">HOLD 2s: EXIT LEVEL</div>
+          </div>
+        </div>
+
+        <!-- Ability 2: Light Pulse (Space) -->
+        <div class="ability-card" id="pulse-card">
+          <div class="ability-key">SPACE</div>
+          <div class="ability-info">
+            <div class="ability-name">LIGHT PULSE</div>
+            <div class="ability-meter-bg"><div class="ability-meter-fill" id="pulse-meter"></div></div>
+            <div class="ability-status" id="pulse-status">READY</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Title Screen Overlay with Tier Selector -->
+    <div id="screen-title" class="screen-overlay">
+      <div class="screen-content title-box">
+        <div class="atmospheric-glow"></div>
+        <h1 class="game-main-title">DON'T WAKE THE DARK</h1>
+        <p class="game-subtitle">An Abandoned Observatory Survival Escape</p>
+
+        <div class="objective-card">
+          <span class="objective-badge">MISSION DIRECTIVE</span>
+          <p class="objective-text">Find the three light keys. Reach the exit. Avoid the shadow.</p>
+        </div>
+
+        <!-- Integrated Webcam Facial Controls Toggle Bar (High Visibility) -->
+        <div class="webcam-controls-bar">
+          <button id="btn-toggle-cam" class="cam-toggle-btn" type="button" title="Start or Stop Webcam Face Tracking">
+            <span class="cam-icon">📹</span>
+            <span id="cam-btn-text">START WEBCAM FACE TRACKING</span>
+          </button>
+          <span class="cam-status-pill" id="cam-status-pill">OFFLINE</span>
+        </div>
+
+        <!-- Interactive Tier Selection Carousel (Arrows &larr; &rarr;) -->
+        <div class="tier-select-section">
+          <div class="tier-select-header">
+            <span class="tier-nav-hint">&larr; USE ARROWS TO SELECT DIFFICULTY &rarr;</span>
+          </div>
+          <div class="tier-cards-container" id="tier-cards-container">
+            <div class="tier-card active" data-tier="EASY">
+              <div class="tier-card-badge">TIER 1</div>
+              <div class="tier-card-name">EASY</div>
+              <div class="tier-card-count">30 LEVELS</div>
+              <div class="tier-card-desc">1 Shadow • 3 Keys • Medium Speed</div>
+            </div>
+            <div class="tier-card" data-tier="MEDIUM">
+              <div class="tier-card-badge">TIER 2</div>
+              <div class="tier-card-name">MEDIUM</div>
+              <div class="tier-card-count">25 LEVELS</div>
+              <div class="tier-card-desc">1 Shadow • 4 Keys • High Speed</div>
+            </div>
+            <div class="tier-card" data-tier="HARD">
+              <div class="tier-card-badge">TIER 3</div>
+              <div class="tier-card-name">HARD</div>
+              <div class="tier-card-count">25 LEVELS</div>
+              <div class="tier-card-desc">2 Shadows • 4 Keys • Medium Speed</div>
+            </div>
+            <div class="tier-card" data-tier="ULTRA_HARD">
+              <div class="tier-card-badge">TIER 4</div>
+              <div class="tier-card-name">ULTRA HARD</div>
+              <div class="tier-card-count">20 LEVELS</div>
+              <div class="tier-card-desc">2 Shadows • 5 Keys • High Speed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-panel">
+          <div class="controls-legend-header">CONTROL SCHEME &bull; KEYBOARD &amp; FACIAL GESTURES</div>
+          <div class="controls-grid">
+            <div class="control-item">
+              <span class="key-cap">&uarr;</span>
+              <span class="gesture-tag">Raise Head</span>
+              <span class="key-desc">Move Upward</span>
+            </div>
+            <div class="control-item">
+              <span class="key-cap">&darr;</span>
+              <span class="gesture-tag">Lower Head</span>
+              <span class="key-desc">Move Downward</span>
+            </div>
+            <div class="control-item">
+              <span class="key-cap">&larr;</span>
+              <span class="gesture-tag">Turn Left</span>
+              <span class="key-desc">Move Left • Title: Prev Tier</span>
+            </div>
+            <div class="control-item">
+              <span class="key-cap">&rarr;</span>
+              <span class="gesture-tag">Turn Right</span>
+              <span class="key-desc">Move Right • Title: Next Tier</span>
+            </div>
+            <div class="control-item">
+              <span class="key-cap">Z</span>
+              <span class="gesture-tag">Open Mouth</span>
+              <span class="key-desc">Start / Protective Ward / Restart</span>
+            </div>
+            <div class="control-item">
+              <span class="key-cap">SPACE</span>
+              <span class="gesture-tag">Blink</span>
+              <span class="key-desc">Light Pulse (Repels Shadow, 3s CD)</span>
+            </div>
+          </div>
+          <p class="controls-listener-note">The external facial listener translates head posture, mouth opening, and eye blinks into keyboard inputs.</p>
+        </div>
+
+        <div class="prompt-container">
+          <div class="prompt-text blinking-prompt" id="title-start-prompt">Press Z to start</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chamber Cleared Overlay (Player-controlled advance, NOT automatic!) -->
+    <div id="screen-chamber-cleared" class="screen-overlay hidden">
+      <div class="screen-content chamber-cleared-box">
+        <div class="trans-badge">CHAMBER SEAL BROKEN</div>
+        <h2 class="trans-title" id="cleared-title">CHAMBER 01 CLEARED!</h2>
+        <p class="trans-sub" id="cleared-sub">The Light Keys have cleansed this observatory quadrant.</p>
+        <div class="trans-bonus" id="cleared-bonus">+200 ESCAPE BONUS • +1 HP RESTORED • +35s TIME</div>
+
+        <div class="cleared-actions-container">
+          <div class="cleared-action-card primary" id="cleared-next-card">
+            <div class="action-card-header">
+              <span class="key-cap">Z</span>
+              <span class="action-card-title">NEXT CHAMBER</span>
+            </div>
+            <div class="prompt-text blinking-prompt" id="cleared-prompt">Press Z to enter Next Chamber</div>
+            <div class="action-card-desc">Enter the next observatory quadrant</div>
+          </div>
+
+          <div class="cleared-action-card secondary" id="cleared-menu-card">
+            <div class="action-card-header">
+              <span class="key-cap">&larr; &rarr;</span>
+              <span class="action-card-title">MAIN MENU</span>
+            </div>
+            <div class="prompt-text-sub" id="cleared-menu-prompt">Exit to Main Menu</div>
+            <div class="action-card-desc">Press Arrow Keys or Space to return</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Screen Overlay -->
+    <div id="screen-victory" class="screen-overlay hidden">
+      <div class="screen-content victory-box">
+        <div class="victory-banner-badge" id="vic-tier-badge">TIER COMPLETE</div>
+        <h1 class="victory-title">YOU SURVIVED THE DARK</h1>
+        <p class="victory-flavor" id="vic-flavor">All chambers of the observatory have been cleansed. The constellation shines eternal.</p>
+
+        <div class="stats-breakdown">
+          <div class="stat-line">
+            <span>Tier Conquered:</span>
+            <span id="vic-tier-name">EASY (30/30 Levels)</span>
+          </div>
+          <div class="stat-line">
+            <span>Keys Collected Score:</span>
+            <span id="vic-keys-score">+300</span>
+          </div>
+          <div class="stat-line">
+            <span>Chamber Escape Bonus:</span>
+            <span id="vic-escape-bonus">+200</span>
+          </div>
+          <div class="stat-line">
+            <span>Remaining Time Bonus:</span>
+            <span id="vic-time-bonus">+0</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-line total">
+            <span>FINAL SCORE:</span>
+            <span id="vic-final-score">0</span>
+          </div>
+        </div>
+
+        <div class="prompt-container">
+          <div class="prompt-text blinking-prompt">Press Z to play again</div>
+          <div class="prompt-subhint" style="margin-top: 10px; font-family: var(--font-tech); font-size: 11px; color: #94a3b8; letter-spacing: 1px;">PRESS ARROW KEYS TO RETURN TO DIFFICULTY MENU</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Screen Overlay -->
+    <div id="screen-gameover" class="screen-overlay hidden">
+      <div class="screen-content gameover-box">
+        <div class="gameover-banner-badge">EXPEDITION FAILED</div>
+        <h1 class="gameover-title">CONSUMED BY DARKNESS</h1>
+        <p class="gameover-cause" id="gameover-cause">The shadow creature claimed your soul.</p>
+
+        <div class="stats-breakdown">
+          <div class="stat-line">
+            <span>Chamber Reached:</span>
+            <span id="gameover-level-reached">Level 1</span>
+          </div>
+          <div class="stat-line total">
+            <span>FINAL SCORE:</span>
+            <span id="gameover-final-score">0</span>
+          </div>
+        </div>
+
+        <div class="prompt-container">
+          <div class="prompt-text blinking-prompt" id="gameover-prompt">Press Z to play again</div>
+          <div class="prompt-subhint" style="margin-top: 10px; font-family: var(--font-tech); font-size: 11px; color: #94a3b8; letter-spacing: 1px;">PRESS ARROW KEYS TO CHANGE DIFFICULTY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="src/input.js?v=4"></script>
+  <script src="src/face_tracker.js?v=4"></script>
+  <script src="src/game.js?v=4"></script>
+</body>
+</html>

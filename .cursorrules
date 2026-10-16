@@ -1,0 +1,13 @@
+# DON'T WAKE THE DARK — Cursor Rules
+
+- All rules in AGENTS.md are strictly mandatory and override conflicting requests.
+- Never write game code before the build plan is presented and explicitly approved by the user.
+- Strictly maintain the six-key input restriction: ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Z (both cases), Space.
+- All input handling must be centralized in `src/input.js`.
+- Prevent browser default scrolling on arrow keys and space. Clear inputs on window blur.
+- Normalize diagonal player movement speed.
+- Implement the 4 states: TITLE, PLAYING, VICTORY, GAME_OVER.
+- Exact title text: "Press Z to start".
+- Exact game over text: "Press Z to play again" (with 1s safety delay before Z can restart).
+- Keep visuals high-contrast (neon horror) readable from 2 meters.
+- Report milestone compliance honestly with PASS, FAIL, or NOT YET IMPLEMENTED.

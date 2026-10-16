@@ -1,0 +1,11 @@
+# DON'T WAKE THE DARK — Windsurf Rules
+
+- Strictly adhere to AGENTS.md at all times.
+- Build-plan approval gate is mandatory: wait for explicit user approval before writing game code.
+- Six-key input scheme only: Up, Down, Left, Right, Z ('z' and 'Z'), Space.
+- Input must be centralized in `src/input.js` with held states, fresh-press tracking, and blur cleanup.
+- Game states: TITLE, PLAYING, VICTORY, GAME_OVER.
+- Exact required texts: `Press Z to start` (Title), `Press Z to play again` (Game Over).
+- 1-second debounce on Game Over before Z restart can be accepted.
+- High-contrast visuals readable from 2 meters.
+- Report milestone compliance with PASS, FAIL, NOT YET IMPLEMENTED.

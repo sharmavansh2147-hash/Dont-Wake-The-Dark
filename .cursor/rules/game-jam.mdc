@@ -1,0 +1,21 @@
+---
+description: Game Jam Rules and Governance for DON'T WAKE THE DARK
+globs: *
+---
+
+# Game Jam Rules: DON'T WAKE THE DARK
+
+## Core Non-Negotiables
+- Follow AGENTS.md rules strictly.
+- Build-plan approval gate: No game code written until the build plan is presented and approved by the user.
+- Six-key mapping: ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Z (both 'z' and 'Z'), Space.
+- Centralized input handling strictly in `src/input.js`.
+- Prevent browser default scrolling for Arrow keys and Space.
+- Clear held keys on window blur.
+- Normalize diagonal player movement.
+- Game Over screen: Ignore Z for first 1.0 second, require release + fresh press to restart.
+- Title screen exact text: `Press Z to start`.
+- Game over screen exact text: `Press Z to play again`.
+- 1 compact arena, 1 shadow pursuer (fair reaction time >=1s, i-frames on damage), 3 keys, 1 exit.
+- Abilities: Protective Ward (Z, ~1s active, ~5s cooldown), Light Pulse (Space, ~3s cooldown, pushes enemy, reveals keys).
+- Report compliance after each milestone honestly with PASS, FAIL, or NOT YET IMPLEMENTED.
